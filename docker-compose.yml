@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  copilot:
+    build: .
+    container_name: agent-browser-copilot
+    restart: unless-stopped
+    ports:
+      - "8766:8766"
+    volumes:
+      - ./config.json:/app/config.json
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production

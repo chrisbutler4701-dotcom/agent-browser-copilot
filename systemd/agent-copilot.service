@@ -1,0 +1,15 @@
+[Unit]
+Description=Agent Browser Copilot Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=%h/agent-browser-copilot
+ExecStart=/usr/bin/node bin/copilot start
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

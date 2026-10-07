@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Hermes Browser Preview</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">🌐</div>
+        <div class="brand-text">
+          <h1>Hermes Browser Preview</h1>
+          <span class="subtitle">Case Manager (@SOSCM_BOT)</span>
+        </div>
+      </div>
+      <div class="status-pill" id="status-pill">
+        <span class="dot" id="status-dot"></span>
+        <span id="status-text">Connecting...</span>
+      </div>
+    </header>
+
+    <!-- Active Tab Banner -->
+    <section class="card tab-card">
+      <div class="tab-header">
+        <div class="tab-badge" id="tab-origin">Detecting tab...</div>
+        <div class="tab-age" id="tab-age">--</div>
+      </div>
+      <h2 class="tab-title" id="tab-title">Loading active tab...</h2>
+      <div class="tab-meta" id="tab-meta">
+        <span class="meta-tag" id="meta-capture">Capture: Ingested</span>
+        <span class="meta-tag" id="meta-watch">Watch: Active</span>
+        <span class="meta-tag" id="meta-transport">Extension: Paired</span>
+      </div>
+    </section>
+
+    <!-- View Mode Tabs -->
+    <div class="view-tabs">
+      <button class="view-tab-btn active" data-tab="preview">📸 Live Screen</button>
+      <button class="view-tab-btn" data-tab="text">📄 Page Content</button>
+      <button class="view-tab-btn" data-tab="elements">🔍 Elements (<span id="elements-tab-badge">0</span>)</button>
+    </div>
+
+    <!-- Tab Pane 1: Live Preview Stage -->
+    <section class="card preview-card tab-pane active" id="pane-preview">
+      <div class="preview-header">
+        <div class="preview-title">
+          <span>Screen Snapshot</span>
+          <span class="pulse-indicator" id="pulse-indicator"></span>
+        </div>
+        <div class="preview-controls">
+          <select id="refresh-rate" class="select-pill">
+            <option value="0">Manual</option>
+            <option value="4000" selected>Auto 4s</option>
+            <option value="8000">Auto 8s</option>
+          </select>
+          <button id="btn-refresh" class="btn-icon" title="Refresh Now">↻</button>
+        </div>
+      </div>
+
+      <div class="stage-wrapper" id="stage-wrapper">
+        <div class="stage-placeholder" id="stage-placeholder">
+          <div class="spinner"></div>
+          <span id="placeholder-msg">Loading screen preview...</span>
+        </div>
+        <img id="screen-img" class="screen-img hidden" alt="Live Browser Screen">
+      </div>
+      <div class="stage-footer">
+        <span id="captured-time">Awaiting capture</span>
+        <button id="btn-snap-now" class="btn-primary-sm">Capture Now</button>
+      </div>
+    </section>
+
+    <!-- Tab Pane 2: Page Text Content -->
+    <section class="card tab-pane" id="pane-text">
+      <div class="preview-header">
+        <div class="preview-title">
+          <span>Live Page Text (What Hermes Reads)</span>
+        </div>
+        <button id="btn-refresh-text" class="btn-icon" title="Refresh Text">↻</button>
+      </div>
+      <div class="page-text-box" id="page-text-content">
+        <em>Loading extracted page text...</em>
+      </div>
+    </section>
+
+    <!-- Tab Pane 3: Detected Elements -->
+    <section class="card tab-pane" id="pane-elements">
+      <div class="preview-header">
+        <div class="preview-title">
+          <span>Detected Interactive Elements</span>
+        </div>
+        <button id="btn-refresh-elements" class="btn-icon" title="Refresh Elements">↻</button>
+      </div>
+      <ul class="element-list" id="element-list">
+        <li class="empty-msg">No interactive elements found.</li>
+      </ul>
+    </section>
+
+    <!-- Approvals & Verified Actions Deck -->
+    <section class="card approvals-card hidden" id="approvals-card">
+      <div class="approvals-header">
+        <span class="alert-icon">⚠️</span>
+        <div>
+          <h3>Action Approval Requested</h3>
+          <p>Hermes proposes executing an action on this workstation.</p>
+        </div>
+      </div>
+      <div class="action-details" id="action-details">
+        <!-- Dynamic verified action content -->
+      </div>
+      <div class="action-buttons">
+        <button id="btn-approve-action" class="btn-approve">Approve & Execute ✅</button>
+        <button id="btn-reject-action" class="btn-reject">Reject ❌</button>
+      </div>
+    </section>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

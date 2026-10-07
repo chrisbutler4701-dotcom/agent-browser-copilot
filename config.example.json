@@ -1,0 +1,23 @@
+{
+  "name": "Agent Browser Copilot",
+  "server": {
+    "port": 8766,
+    "host": "0.0.0.0",
+    "publicUrl": "http://localhost:8766",
+    "previewUrl": "http://localhost:8766/preview/"
+  },
+  "security": {
+    "brokerToken": "example_broker_token_replace_with_copilot_setup",
+    "mcpToken": "example_mcp_token_replace_with_copilot_setup",
+    "viewToken": "example_view_token_replace_with_copilot_setup"
+  },
+  "telegram": {
+    "enabled": false,
+    "botToken": "YOUR_TELEGRAM_BOT_TOKEN_FROM_BOTFATHER",
+    "allowedUserIds": []
+  },
+  "agent": {
+    "type": "hermes",
+    "name": "Agent Browser Copilot"
+  }
+}

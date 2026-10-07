@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hermes Work Browser Copilot</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --amber: #f59e0b;
+      --code-bg: #090d16;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      padding: 12px;
+      gap: 10px;
+    }
+
+    /* Header */
+    #header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .agent-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .title-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .title-text h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .title-text .sub-server {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .control-toggle {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      border: 1px solid var(--card-border);
+      background: #1e293b;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .control-toggle.active {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+
+    .status-dot.connected {
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+
+    /* Pairing Banner */
+    #pairing-banner {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #pairing-banner.hidden { display: none; }
+
+    .pairing-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    #pair-code-input {
+      flex: 1;
+      background: var(--code-bg);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .btn-pair {
+      background: var(--amber);
+      color: #000;
+      font-weight: 600;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Chat Messages */
+    #chat-container {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-right: 4px;
+    }
+
+    #chat-container::-webkit-scrollbar { width: 5px; }
+    #chat-container::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 3px; }
+
+    .msg {
+      max-width: 90%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .msg-user {
+      align-self: flex-end;
+      background: var(--primary);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+
+    .msg-agent {
+      align-self: flex-start;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      border-bottom-left-radius: 2px;
+    }
+
+    .msg-agent .context-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--code-bg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .msg-system {
+      align-self: center;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px dashed var(--card-border);
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    /* Verified Action Card */
+    .verified-card {
+      background: #1e293b;
+      border: 1px solid #3b82f6;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+
+    .verified-title {
+      font-weight: 600;
+      color: #60a5fa;
+      margin-bottom: 4px;
+    }
+
+    .verified-changes {
+      background: var(--code-bg);
+      padding: 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 11px;
+      margin: 6px 0;
+    }
+
+    .verified-buttons {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .btn-approve {
+      flex: 1;
+      background: var(--success);
+      color: white;
+      border: none;
+      padding: 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-reject {
+      flex: 1;
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Chips */
+    #quick-chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    #quick-chips::-webkit-scrollbar { height: 3px; }
+    #quick-chips::-webkit-scrollbar-thumb { background: var(--card-border); }
+
+    .chip {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 9999px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .chip:hover {
+      background: #334155;
+      color: #fff;
+    }
+
+    /* Composer */
+    #composer {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-top: 1px solid var(--card-border);
+      padding-top: 8px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    #chat-input {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    #chat-input:focus { border-color: var(--primary); }
+
+    #send-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    #send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <div class="title-group">
+      <div class="agent-avatar">H</div>
+      <div class="title-text">
+        <h2>Hermes Copilot</h2>
+        <span class="sub-server">twinbrowser.bbos.tech</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="control-toggle" class="control-toggle" title="Allow Hermes to control this browser">Control: OFF</button>
+      <div id="status-dot" class="status-dot" title="Connection status"></div>
+    </div>
+  </div>
+
+  <div id="pairing-banner" class="hidden">
+    <span>⚠️ Browser not paired. Enter a one-time pairing code:</span>
+    <div class="pairing-row">
+      <input type="text" id="pair-code-input" placeholder="e.g. NWXXVZD7ENBY" maxlength="16" />
+      <button id="pair-btn" class="btn-pair">Pair</button>
+    </div>
+  </div>
+
+  <div id="chat-container">
+    <div class="msg msg-system">
+      Connected to Hermes session on B2. Your messages carry sanitized context from the active tab. No software is required on this workstation.
+    </div>
+  </div>
+
+  <div id="composer">
+    <div id="quick-chips">
+      <span class="chip" data-text="Summarize the key information on this page.">📄 Summarize Page</span>
+      <span class="chip" data-text="What actions or next steps are needed based on this page?">⚡ Action Items</span>
+      <span class="chip" data-text="Extract any dates, names, or key data points.">🔍 Extract Data</span>
+    </div>
+    <div class="input-row">
+      <input type="text" id="chat-input" placeholder="Ask Hermes about this page..." autocomplete="off" />
+      <button id="send-btn">Send</button>
+    </div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "name": "agent-browser-copilot",
+  "version": "0.4.0",
+  "description": "Customer distribution suite for AI browser copilot: Chrome MV3 extension, live Telegram Mini App preview, broker relay, and Telegram bot bridge.",
+  "type": "module",
+  "bin": {
+    "copilot": "./bin/copilot"
+  },
+  "scripts": {
+    "start": "node bin/copilot start",
+    "setup": "node setup.js",
+    "doctor": "node bin/doctor.js",
+    "bot": "node telegram-bot/bot.js",
+    "broker": "node broker/server.js"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "browser-copilot",
+    "chrome-extension",
+    "telegram-mini-app",
+    "hermes",
+    "openclaw",
+    "mcp"
+  ],
+  "author": "Chris Butler",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

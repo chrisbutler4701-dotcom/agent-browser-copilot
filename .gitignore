@@ -1,0 +1,6 @@
+node_modules/
+config.json
+data/
+*.log
+.DS_Store
+.chrome_test_profile/
