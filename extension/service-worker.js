@@ -39,6 +39,8 @@ const OUTLOOK_APP_ORIGINS = new Set([
   'https://outlook.cloud.microsoft'
 ]);
 
+let recentScreenshotCache = null;
+
 // Registered only inside the extension so this module stays importable in Node.
 if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -132,6 +134,10 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       return true;
     }
     if (message.type === 'toggle-hermes-control') { toggleHermesControl().then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message })); return true; }
+    if (message.type === 'synthesize-speech') {
+      synthesizeSpeech(message).then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
+      return true;
+    }
     if (message.type === 'durable-runner-execute-command') {
       executeCommandInActiveTab(message.command).then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
       return true;
@@ -598,10 +604,15 @@ export async function screenshotActiveTab(tab, command) {
     try {
       dataUrl = await chrome.tabs.captureVisibleTab(undefined, { format: 'png' });
     } catch (err2) {
-      return { ok: false, error: `Visible-tab screenshot capture failed: ${err.message || err} (fallback: ${err2.message || err2})` };
+      if (recentScreenshotCache && (Date.now() - recentScreenshotCache.timestamp < 2500) && recentScreenshotCache.tabId === tab.id) {
+        dataUrl = recentScreenshotCache.dataUrl;
+      } else {
+        return { ok: false, error: `Visible-tab screenshot capture failed: ${err.message || err} (fallback: ${err2.message || err2})` };
+      }
     }
   }
   if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/png;base64,')) return { ok: false, error: 'Screenshot capture did not return a PNG data URL.' };
+  recentScreenshotCache = { dataUrl, tabId: tab.id, timestamp: Date.now() };
   if (new TextEncoder().encode(dataUrl).byteLength > MAX_SCREENSHOT_DATA_URL_BYTES) return { ok: false, error: 'Screenshot exceeds the 5 MB limit.' };
   const capturedAt = new Date().toISOString();
   const delivered = await deliverScreenshot({ commandId: command.id, dataUrl, tabId: tab.id, url: tab.url, capturedAt, mimeType: 'image/png' });
@@ -749,4 +760,60 @@ export function resumeCommandTransport() {
   return ensureDurableCommandRunner();
 }
 
+export async function synthesizeSpeech({ text, voice } = {}) {
+  const clean = typeof text === 'string' ? text.trim() : '';
+  if (!clean) {
+    return { ok: false, error: 'Empty text provided for speech synthesis' };
+  }
+
+  // Look for any customized TTS endpoint in storage, defaulting to local Kokoro server
+  let ttsEndpoint = 'http://127.0.0.1:8791/speak';
+  let targetVoice = voice || 'af_bella';
+
+  if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+    try {
+      const stored = await chrome.storage.local.get(['ttsUrl', 'ttsVoice']);
+      if (stored.ttsUrl) ttsEndpoint = stored.ttsUrl;
+      if (stored.ttsVoice && !voice) targetVoice = stored.ttsVoice;
+    } catch { /* ignore */ }
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+  try {
+    const response = await fetch(ttsEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: clean, voice: targetVoice }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errBody = await response.text().catch(() => '');
+      return { ok: false, error: `Kokoro TTS returned ${response.status}: ${errBody.slice(0, 150)}` };
+    }
+
+    const buffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    const base64 = typeof btoa === 'function' ? btoa(binary) : Buffer.from(binary, 'binary').toString('base64');
+    return {
+      ok: true,
+      audioDataUrl: `data:audio/wav;base64,${base64}`,
+      voice: targetVoice,
+      provider: 'kokoro'
+    };
+  } catch (error) {
+    clearTimeout(timeoutId);
+    return { ok: false, error: error.message };
+  }
+}
+
 export { normalizeBrokerUrl, validateBrokerUrl, chatEndpointUrl };
+

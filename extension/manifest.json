@@ -19,7 +19,7 @@
     "<all_urls>"
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://twinbrowser.bbos.tech wss://twinbrowser.bbos.tech http://127.0.0.1"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://twinbrowser.bbos.tech wss://twinbrowser.bbos.tech http://127.0.0.1 http://127.0.0.1:* http://localhost:*"
   },
   "background": {
     "service_worker": "service-worker.js",
